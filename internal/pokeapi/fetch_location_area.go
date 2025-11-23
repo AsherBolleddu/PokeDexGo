@@ -2,41 +2,37 @@ package pokeapi
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 )
 
-type LocationArea struct {
-	Count    int     `json:"count"`
-	Next     *string `json:"next"`
-	Previous *string `json:"previous"`
-	Results  []struct {
-		Name string `json:"name"`
-		URL  string `json:"url"`
-	} `json:"results"`
-}
+func (c *Client) ListLocations(pageURL *string) (RespShallowLocations, error) {
+	url := baseURL + "/location-area"
+	if pageURL != nil {
+		url = *pageURL
+	}
 
-func GetLocationArea(url string) (LocationArea, error) {
-	resp, err := http.Get(url)
+	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return LocationArea{}, fmt.Errorf("could not get location area: %w", err)
+		return RespShallowLocations{}, err
+	}
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return RespShallowLocations{}, err
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		return LocationArea{}, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
-	}
-
-	body, err := io.ReadAll(resp.Body)
+	data, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return LocationArea{}, fmt.Errorf("could not read response body: %w", err)
+		return RespShallowLocations{}, err
 	}
 
-	var locationArea LocationArea
-	if err := json.Unmarshal(body, &locationArea); err != nil {
-		return LocationArea{}, fmt.Errorf("could not unmarshal data: %w", err)
+	locationsResp := RespShallowLocations{}
+	err = json.Unmarshal(data, &locationsResp)
+	if err != nil {
+		return RespShallowLocations{}, err
 	}
 
-	return locationArea, nil
+	return locationsResp, nil
 }

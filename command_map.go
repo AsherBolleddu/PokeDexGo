@@ -1,15 +1,42 @@
 package main
 
 import (
-	"github.com/AsherBolleddu/pokedexcli/internal/pokeapi"
+	"errors"
+	"fmt"
 )
 
-func commandMap(config *Config) error {
-	data, err := pokeapi.GetLocationArea(config.Next)
+func commandMap(config *config) error {
+	locationsResp, err := config.pokeapiClient.ListLocations(config.nextLocationsURL)
 	if err != nil {
 		return err
 	}
 
-	config.Next = *data.Next
+	config.nextLocationsURL = locationsResp.Next
+	config.prevLocationsURL = locationsResp.Previous
+
+	for _, location := range locationsResp.Results {
+		fmt.Println(location.Name)
+	}
+
+	return nil
+}
+
+func commandMapB(config *config) error {
+	if config.prevLocationsURL == nil {
+		return errors.New("you're on the first page")
+	}
+
+	locationsResp, err := config.pokeapiClient.ListLocations(config.prevLocationsURL)
+	if err != nil {
+		return err
+	}
+
+	config.nextLocationsURL = locationsResp.Next
+	config.prevLocationsURL = locationsResp.Previous
+
+	for _, location := range locationsResp.Results {
+		fmt.Println(location.Name)
+	}
+
 	return nil
 }
