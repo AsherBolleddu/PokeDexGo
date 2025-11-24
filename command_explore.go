@@ -4,7 +4,7 @@ import "fmt"
 
 func commandExplore(config *config, args ...string) error {
 	if len(args) != 1 {
-		return fmt.Errorf("you must provide a location name")
+		return fmt.Errorf("you must provide a location name\n")
 	}
 
 	locationName := args[0]
